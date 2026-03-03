@@ -13,6 +13,8 @@ export const metadata: Metadata = {
     "Portfolio",
     "Next.js",
     "React",
+    "ElysiaJS",
+    "Bun"
   ],
 };
 
