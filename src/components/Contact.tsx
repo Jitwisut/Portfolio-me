@@ -58,7 +58,7 @@ export default function Contact() {
               marginBottom: "3rem",
             }}
           >
-            <a href="tanzajitwisut@gmail.com" className="btn-primary">
+            <a href="mailto:tanzajitwisut@gmail.com" className="btn-primary">
               <span>
                 <svg
                   width="18"
