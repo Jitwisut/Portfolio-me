@@ -109,26 +109,34 @@ export default function About() {
                   Quick Facts
                 </h3>
                 {[
-                  { label: "Location", value: "Rangsit,Pathumthani" },
+                  { label: "Location", value: "Rangsit, Pathumthani" },
                   {
                     label: "Education",
                     value: "Computer Engineering, Rangsit University",
                   },
                   { label: "Experience", value: "Internship / Student" },
                   { label: "Focus", value: "Full-Stack & Design" },
-                ].map((item, i) => (
+                ].map((item, i, arr) => (
                   <div
                     key={i}
                     style={{
                       display: "flex",
                       justifyContent: "space-between",
+                      alignItems: "flex-start",
+                      gap: "1rem",
                       padding: "0.75rem 0",
                       borderBottom:
-                        i < 4 ? "1px solid var(--border-color)" : "none",
+                        i !== arr.length - 1
+                          ? "1px solid var(--border-color)"
+                          : "none",
                     }}
                   >
                     <span
-                      style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}
+                      style={{
+                        color: "var(--text-muted)",
+                        fontSize: "0.9rem",
+                        whiteSpace: "nowrap",
+                      }}
                     >
                       {item.label}
                     </span>
@@ -137,6 +145,8 @@ export default function About() {
                         color: "var(--text-primary)",
                         fontWeight: 500,
                         fontSize: "0.9rem",
+                        textAlign: "right",
+                        wordBreak: "break-word",
                       }}
                     >
                       {item.value}
