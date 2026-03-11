@@ -20,19 +20,43 @@ export default function Navbar() {
         { label: 'Contact', href: '#contact' },
     ];
 
-    const handleClick = () => setMobileOpen(false);
+    // สร้างฟังก์ชันจัดการการคลิกลิงก์
+    const handleLinkClick = (e: any, href: any) => {
+        // ถ้าลิงก์ที่กดคือ Home
+        if (href === '#home') {
+            e.preventDefault(); // ปิดการทำงานปกติของแท็ก <a> ที่จะกระโดดไปที่ id ทันที
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth' // เลื่อนขึ้นแบบนุ่มนวล
+            });
+        }
+
+        // ปิดเมนูมือถือทุกครั้งที่กดเลือกลิงก์
+        setMobileOpen(false);
+    };
 
     return (
         <>
             <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
                 <div className="navbar-inner">
-                    <a href="#home" className="navbar-logo">
+                    {/* แนะนำให้เพิ่ม onClick ตรง Logo ด้วย เผื่อผู้ใช้กดโลโก้แล้วอยากให้กลับขึ้นบนสุด */}
+                    <a
+                        href="#home"
+                        className="navbar-logo"
+                        onClick={(e) => handleLinkClick(e, '#home')}
+                    >
                         ✦ Portfolio
                     </a>
                     <ul className="navbar-links">
                         {links.map((l) => (
                             <li key={l.href}>
-                                <a href={l.href}>{l.label}</a>
+                                <a
+                                    href={l.href}
+                                    // เรียกใช้ฟังก์ชัน handleLinkClick เมื่อกดลิงก์
+                                    onClick={(e) => handleLinkClick(e, l.href)}
+                                >
+                                    {l.label}
+                                </a>
                             </li>
                         ))}
                     </ul>
@@ -47,7 +71,12 @@ export default function Navbar() {
             </nav>
             <div className={`mobile-menu ${mobileOpen ? 'open' : ''}`}>
                 {links.map((l) => (
-                    <a key={l.href} href={l.href} onClick={handleClick}>
+                    <a
+                        key={l.href}
+                        href={l.href}
+                        // เรียกใช้ฟังก์ชันเดียวกันสำหรับเมนูมือถือ
+                        onClick={(e) => handleLinkClick(e, l.href)}
+                    >
                         {l.label}
                     </a>
                 ))}
