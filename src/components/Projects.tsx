@@ -16,7 +16,7 @@ const projects = [
   },
   {
     name: "Money-Tracker",
-    desc: "Full-stack expense tracking platform featuring interactive dashboard summaries, dynamic categorization, and advanced date filtering.",
+    desc: "Full-stack expense platform with AI-powered slip scanning for automated logging, interactive dashboard summaries, and dynamic data filtering.",
     tags: ["Next.js", "ElysiaJS", "PostgreSQL"],
     url: "https://money-tracker-omega-ten.vercel.app",
     color: "#22c55e",
