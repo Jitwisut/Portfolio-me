@@ -2,6 +2,12 @@
 
 import { useEffect } from 'react';
 
+declare global {
+    interface Window {
+        __lenis?: import('lenis').default;
+    }
+}
+
 export default function SmoothScroll({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         let lenis: import('lenis').default | undefined;
@@ -14,6 +20,9 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
                     easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
                     touchMultiplier: 2,
                 });
+                // Shared so other components (e.g. Intro auto-advance) can
+                // drive smooth scrolling through the same instance
+                window.__lenis = lenis;
 
                 function raf(time: number) {
                     lenis?.raf(time);
@@ -46,6 +55,7 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
         return () => {
             if (lenis) {
                 lenis.destroy();
+                if (window.__lenis === lenis) delete window.__lenis;
             }
         };
     }, []);

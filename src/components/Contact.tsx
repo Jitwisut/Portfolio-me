@@ -3,7 +3,7 @@
 import ScrollReveal from "./ScrollReveal";
 import SectionLabel from "./SectionLabel";
 import Magnetic from "./Magnetic";
-import TiltCard from "./TiltCard";
+import ContactScene from "./ContactScene";
 
 export default function Contact() {
   return (
@@ -11,23 +11,22 @@ export default function Contact() {
       id="contact"
       style={{
         position: "relative",
-        padding: "6rem 0",
+        padding: "9rem 0",
         overflow: "hidden",
       }}
     >
-      <div
-        className="floating-orb"
-        style={{
-          width: 200,
-          height: 200,
-          background: "rgba(168,85,247,0.06)",
-          top: "10%",
-          right: "5%",
-          animationDelay: "5s",
-        }}
-      />
+      {/* Interactive constellation behind everything */}
+      <ContactScene />
 
-      <div className="container" style={{ maxWidth: 700, textAlign: "center" }}>
+      <div
+        className="container"
+        style={{
+          position: "relative",
+          zIndex: 10,
+          maxWidth: 760,
+          textAlign: "center",
+        }}
+      >
         <ScrollReveal>
           <SectionLabel>Get In Touch</SectionLabel>
         </ScrollReveal>
@@ -42,7 +41,7 @@ export default function Contact() {
         <ScrollReveal delay={200}>
           <p
             className="section-subtitle"
-            style={{ margin: "0 auto 2.5rem", textAlign: "center" }}
+            style={{ margin: "0 auto 2.75rem", textAlign: "center" }}
           >
             Whether you have a project in mind, want to collaborate, or just
             want to say hello — feel free to reach out. I&apos;m always open to
@@ -57,7 +56,7 @@ export default function Contact() {
               flexWrap: "wrap",
               justifyContent: "center",
               gap: "1rem",
-              marginBottom: "3rem",
+              marginBottom: "2.75rem",
             }}
           >
             <Magnetic>
@@ -99,52 +98,45 @@ export default function Contact() {
         </ScrollReveal>
 
         <ScrollReveal delay={400}>
-          <TiltCard
-            maxTilt={3}
-            className="glass spotlight-card"
+          <div
             style={{
-              borderRadius: 20,
-              padding: "2rem",
-              textAlign: "center",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: "0.75rem",
+              flexWrap: "wrap",
             }}
           >
-            <p
+            <span
               style={{
-                fontSize: "0.9rem",
-                color: "var(--text-secondary)",
-                marginBottom: "1rem",
+                fontSize: "0.8rem",
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                color: "var(--text-muted)",
+                marginRight: "0.25rem",
               }}
             >
               Find me on
-            </p>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                gap: "0.75rem",
-                flexWrap: "wrap",
-              }}
-            >
-              {[
-                { label: "GitHub", href: "https://github.com/Jitwisut" },
-                {
-                  label: "Instagram",
-                  href: "https://www.instagram.com/txxjit_tb/",
-                },
-              ].map((link) => (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="skill-badge"
-                  style={{ textDecoration: "none", cursor: "pointer" }}
-                >
-                  {link.label}
-                </a>
-              ))}
-            </div>
-          </TiltCard>
+            </span>
+            {[
+              { label: "GitHub", href: "https://github.com/Jitwisut" },
+              {
+                label: "Instagram",
+                href: "https://www.instagram.com/txxjit_tb/",
+              },
+            ].map((link) => (
+              <a
+                key={link.label}
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="skill-badge"
+                style={{ textDecoration: "none", cursor: "pointer" }}
+              >
+                {link.label}
+              </a>
+            ))}
+          </div>
         </ScrollReveal>
       </div>
     </section>

@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import IntroScene from './IntroScene';
 
 const lines = [
-    { text: 'THIS IS MY', gradient: false },
-    { text: 'PORTFOLIO', gradient: true },
+    { text: 'This is my', big: false },
+    { text: 'PORTFOLIO', big: true },
 ];
 
 // Deterministic pseudo-random in [0,1) per letter index
@@ -14,20 +15,25 @@ const rand = (i: number, seed: number) => {
 };
 
 /**
- * Full-screen opening statement, pinned while content scrolls over it.
- * Entrance: each letter rises in blurred and tilted, then sharpens.
- * Exit (scroll): the whole statement spins past 50°, every letter
- * scatters in its own direction and everything fades away.
+ * Full-screen opening statement over a Three.js scene, pinned while the
+ * content scrolls over it.
+ * Entrance: letters rise in blurred and tilted, then sharpen.
+ * After the reveal finishes an "ENTERING" bar fills, then the page
+ * auto-scrolls down — the statement spins past 50° and every letter
+ * scatters its own way (same scrub also drives manual scrolling).
  */
 export default function Intro() {
     const [ready, setReady] = useState(false);
+    const [armed, setArmed] = useState(false);
     const contentRef = useRef<HTMLDivElement>(null);
+    const bgRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const raf = requestAnimationFrame(() => setReady(true));
         return () => cancelAnimationFrame(raf);
     }, []);
 
+    // Scroll scrub: spin, scatter and fade (manual or auto scroll)
     useEffect(() => {
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
         const content = contentRef.current;
@@ -54,6 +60,9 @@ export default function Intro() {
                     const v = vectors[i];
                     el.style.transform = `translate(${(v.dx * p).toFixed(1)}px, ${(v.dy * p).toFixed(1)}px) rotate(${(v.rot * p).toFixed(1)}deg)`;
                 });
+                if (bgRef.current) {
+                    bgRef.current.style.opacity = Math.max(1 - p * 1.1, 0).toFixed(3);
+                }
             });
         };
 
@@ -65,15 +74,48 @@ export default function Intro() {
         };
     }, []);
 
+    // Auto-advance: once the reveal finishes, fill the ENTERING bar and
+    // scroll on — unless the visitor has already taken over
+    useEffect(() => {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+        let cancelled = false;
+        const cancel = () => {
+            cancelled = true;
+        };
+        window.addEventListener('wheel', cancel, { passive: true, once: true });
+        window.addEventListener('touchstart', cancel, { passive: true, once: true });
+
+        const arm = setTimeout(() => setArmed(true), 2800);
+        const go = setTimeout(() => {
+            if (cancelled || window.scrollY > 40) return;
+            const target = window.innerHeight;
+            if (window.__lenis) {
+                window.__lenis.scrollTo(target, { duration: 1.9 });
+            } else {
+                window.scrollTo({ top: target, behavior: 'smooth' });
+            }
+        }, 5100);
+
+        return () => {
+            clearTimeout(arm);
+            clearTimeout(go);
+            window.removeEventListener('wheel', cancel);
+            window.removeEventListener('touchstart', cancel);
+        };
+    }, []);
+
     let letterIndex = 0;
 
     return (
         <section
             id="home"
-            className={`intro-section ${ready ? 'intro-ready' : ''}`}
+            className={`intro-section ${ready ? 'intro-ready' : ''} ${armed ? 'intro-armed' : ''}`}
         >
-            <div className="grid-pattern" />
             <div className="intro-glow" />
+            <div ref={bgRef} className="intro-3d-wrap">
+                <IntroScene />
+            </div>
 
             <div
                 ref={contentRef}
@@ -93,11 +135,15 @@ export default function Intro() {
 
                 <h1 className="intro-title" aria-label="This is my portfolio">
                     {lines.map((line) => (
-                        <span key={line.text} className="intro-line" aria-hidden="true">
+                        <span
+                            key={line.text}
+                            className={`intro-line ${line.big ? 'intro-line-big' : 'intro-line-script'}`}
+                            aria-hidden="true"
+                        >
                             {line.text.split('').map((ch, i) => (
                                 <span key={i} className="intro-letter-scatter">
                                     <span
-                                        className={`intro-letter ${line.gradient ? 'intro-letter-gradient' : ''}`}
+                                        className={`intro-letter ${line.big ? 'intro-letter-gradient' : ''}`}
                                         style={{
                                             transitionDelay: ready
                                                 ? `${(0.35 + letterIndex++ * 0.05).toFixed(2)}s`
@@ -113,23 +159,14 @@ export default function Intro() {
                 </h1>
 
                 <p className="intro-sub">Jitwisut Thobut — Fullstack Developer</p>
-            </div>
 
-            <a href="#about" className="intro-scroll" aria-label="Scroll to main content">
-                <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                >
-                    <path d="M12 5v14" />
-                    <path d="m19 12-7 7-7-7" />
-                </svg>
-            </a>
+                <div className="intro-enter" aria-hidden="true">
+                    <span className="intro-enter-label">Entering portfolio</span>
+                    <div className="intro-enter-bar">
+                        <div className="intro-enter-fill" />
+                    </div>
+                </div>
+            </div>
         </section>
     );
 }
