@@ -1,6 +1,9 @@
 "use client";
 
 import ScrollReveal from "./ScrollReveal";
+import SectionLabel from "./SectionLabel";
+import Magnetic from "./Magnetic";
+import TiltCard from "./TiltCard";
 
 export default function Contact() {
   return (
@@ -17,7 +20,7 @@ export default function Contact() {
         style={{
           width: 200,
           height: 200,
-          background: "rgba(6,182,212,0.06)",
+          background: "rgba(168,85,247,0.06)",
           top: "10%",
           right: "5%",
           animationDelay: "5s",
@@ -26,14 +29,13 @@ export default function Contact() {
 
       <div className="container" style={{ maxWidth: 700, textAlign: "center" }}>
         <ScrollReveal>
-          <span className="section-label">✦ Get In Touch</span>
+          <SectionLabel>Get In Touch</SectionLabel>
         </ScrollReveal>
 
         <ScrollReveal delay={100}>
           <h2 className="section-title" style={{ marginBottom: "1rem" }}>
             Let&apos;s create something{" "}
-            <span style={{ color: "var(--accent-cyan)" }}>amazing</span>{" "}
-            together
+            <span className="text-gradient">amazing</span> together
           </h2>
         </ScrollReveal>
 
@@ -58,45 +60,50 @@ export default function Contact() {
               marginBottom: "3rem",
             }}
           >
-            <a href="mailto:tanzajitwisut@gmail.com" className="btn-primary">
-              <span>
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  style={{
-                    display: "inline",
-                    verticalAlign: "middle",
-                    marginRight: 8,
-                  }}
-                >
-                  <rect x="2" y="4" width="20" height="16" rx="2" />
-                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-                </svg>
-                Send an Email
-              </span>
-            </a>
-            <a
-              href="https://www.linkedin.com/in/jitwisut-thobut-0a0994357/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-outline"
-            >
-              <span>LinkedIn</span>
-            </a>
+            <Magnetic>
+              <a href="mailto:tanzajitwisut@gmail.com" className="btn-primary">
+                <span>
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{
+                      display: "inline",
+                      verticalAlign: "middle",
+                      marginRight: 8,
+                    }}
+                  >
+                    <rect x="2" y="4" width="20" height="16" rx="2" />
+                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                  </svg>
+                  Send an Email
+                </span>
+              </a>
+            </Magnetic>
+            <Magnetic>
+              <a
+                href="https://www.linkedin.com/in/jitwisut-thobut-0a0994357/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-outline"
+              >
+                <span>LinkedIn</span>
+              </a>
+            </Magnetic>
           </div>
         </ScrollReveal>
 
         <ScrollReveal delay={400}>
-          <div
-            className="glass"
+          <TiltCard
+            maxTilt={3}
+            className="glass spotlight-card"
             style={{
-              borderRadius: 16,
+              borderRadius: 20,
               padding: "2rem",
               textAlign: "center",
             }}
@@ -120,7 +127,6 @@ export default function Contact() {
             >
               {[
                 { label: "GitHub", href: "https://github.com/Jitwisut" },
-
                 {
                   label: "Instagram",
                   href: "https://www.instagram.com/txxjit_tb/",
@@ -138,7 +144,7 @@ export default function Contact() {
                 </a>
               ))}
             </div>
-          </div>
+          </TiltCard>
         </ScrollReveal>
       </div>
     </section>

@@ -13,10 +13,11 @@ interface TextRevealProps {
 export default function TextReveal({
     children,
     className = '',
-    as: Tag = 'p',
+    as = 'p',
     delay = 0,
     staggerMs = 40,
 }: TextRevealProps) {
+    const Tag = as as React.ElementType;
     const containerRef = useRef<HTMLElement>(null);
     const [revealed, setRevealed] = useState(false);
 
@@ -43,7 +44,7 @@ export default function TextReveal({
     const words = children.split(' ');
 
     return (
-        <Tag ref={containerRef as any} className={`text-reveal-container ${className}`}>
+        <Tag ref={containerRef} className={`text-reveal-container ${className}`}>
             {words.map((word, i) => (
                 <span
                     key={i}

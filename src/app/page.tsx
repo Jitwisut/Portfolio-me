@@ -1,5 +1,5 @@
 import Navbar from '@/components/Navbar';
-import Hero from '@/components/Hero';
+import Intro from '@/components/Intro';
 import About from '@/components/About';
 import Skills from '@/components/Skills';
 import Projects from '@/components/Projects';
@@ -12,14 +12,14 @@ export default function Home() {
     <SmoothScroll>
       <Navbar />
       <main>
-        {/* Scroll-over container: Hero stays sticky, dark content scrolls over it */}
+        {/* Scroll-over container: the Intro statement stays pinned while the
+            dark content scrolls up over it. On scroll the statement spins,
+            its letters scatter apart and it fades away. */}
         <div className="scroll-over-wrapper">
-          {/* This section stays pinned at top */}
           <div className="sticky-hero">
-            <Hero />
+            <Intro />
           </div>
 
-          {/* This dark section scrolls UP over the hero */}
           <div className="overlay-content">
             <About />
             <Skills />

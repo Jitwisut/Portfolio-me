@@ -1,6 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, MouseEvent } from 'react';
+
+const links = [
+    { label: 'Home', href: '#home' },
+    { label: 'About', href: '#about' },
+    { label: 'Skills', href: '#skills' },
+    { label: 'Projects', href: '#projects' },
+    { label: 'Contact', href: '#contact' },
+];
 
 export default function Navbar() {
     const [scrolled, setScrolled] = useState(false);
@@ -12,26 +20,12 @@ export default function Navbar() {
         return () => window.removeEventListener('scroll', onScroll);
     }, []);
 
-    const links = [
-        { label: 'Home', href: '#home' },
-        { label: 'About', href: '#about' },
-        { label: 'Skills', href: '#skills' },
-        { label: 'Projects', href: '#projects' },
-        { label: 'Contact', href: '#contact' },
-    ];
-
-    // สร้างฟังก์ชันจัดการการคลิกลิงก์
-    const handleLinkClick = (e: any, href: any) => {
-        // ถ้าลิงก์ที่กดคือ Home
+    const handleLinkClick = (e: MouseEvent<HTMLAnchorElement>, href: string) => {
+        // Home ให้เลื่อนกลับขึ้นบนสุดแบบนุ่มนวลแทนการกระโดดทันที
         if (href === '#home') {
-            e.preventDefault(); // ปิดการทำงานปกติของแท็ก <a> ที่จะกระโดดไปที่ id ทันที
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth' // เลื่อนขึ้นแบบนุ่มนวล
-            });
+            e.preventDefault();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
-
-        // ปิดเมนูมือถือทุกครั้งที่กดเลือกลิงก์
         setMobileOpen(false);
     };
 
@@ -39,20 +33,18 @@ export default function Navbar() {
         <>
             <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
                 <div className="navbar-inner">
-                    {/* แนะนำให้เพิ่ม onClick ตรง Logo ด้วย เผื่อผู้ใช้กดโลโก้แล้วอยากให้กลับขึ้นบนสุด */}
                     <a
                         href="#home"
                         className="navbar-logo"
                         onClick={(e) => handleLinkClick(e, '#home')}
                     >
-                        ✦ Portfolio
+                        Jitwisut<span className="navbar-logo-dot">.</span>
                     </a>
                     <ul className="navbar-links">
                         {links.map((l) => (
                             <li key={l.href}>
                                 <a
                                     href={l.href}
-                                    // เรียกใช้ฟังก์ชัน handleLinkClick เมื่อกดลิงก์
                                     onClick={(e) => handleLinkClick(e, l.href)}
                                 >
                                     {l.label}
@@ -61,11 +53,13 @@ export default function Navbar() {
                         ))}
                     </ul>
                     <button
-                        className="menu-btn"
+                        className={`menu-btn ${mobileOpen ? 'open' : ''}`}
                         onClick={() => setMobileOpen(!mobileOpen)}
                         aria-label="Toggle menu"
+                        aria-expanded={mobileOpen}
                     >
-                        {mobileOpen ? 'Close' : 'Menu'}
+                        <span className="menu-btn-line" />
+                        <span className="menu-btn-line" />
                     </button>
                 </div>
             </nav>
@@ -74,7 +68,6 @@ export default function Navbar() {
                     <a
                         key={l.href}
                         href={l.href}
-                        // เรียกใช้ฟังก์ชันเดียวกันสำหรับเมนูมือถือ
                         onClick={(e) => handleLinkClick(e, l.href)}
                     >
                         {l.label}

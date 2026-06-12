@@ -2,6 +2,8 @@
 
 import ScrollReveal from "./ScrollReveal";
 import TextReveal from "./TextReveal";
+import TiltCard from "./TiltCard";
+import SectionLabel from "./SectionLabel";
 
 export default function About() {
   return (
@@ -18,7 +20,7 @@ export default function About() {
         style={{
           width: 250,
           height: 250,
-          background: "rgba(6,182,212,0.05)",
+          background: "rgba(168,85,247,0.05)",
           top: "20%",
           left: "-5%",
           animationDelay: "2s",
@@ -27,7 +29,7 @@ export default function About() {
 
       <div className="container">
         <ScrollReveal>
-          <span className="section-label">✦ About Me</span>
+          <SectionLabel>About Me</SectionLabel>
         </ScrollReveal>
 
         <div
@@ -90,18 +92,20 @@ export default function About() {
 
           <div style={{ flex: "1 1 300px" }}>
             <ScrollReveal direction="right" delay={200}>
-              <div
-                className="glass"
+              <TiltCard
+                maxTilt={3}
+                className="glass spotlight-card"
                 style={{
-                  borderRadius: 16,
+                  borderRadius: 20,
                   padding: "2rem",
                 }}
               >
                 <h3
                   style={{
-                    fontFamily: "'Outfit', sans-serif",
-                    fontSize: "1.25rem",
+                    fontFamily: "'Fraunces', Georgia, serif",
+                    fontSize: "1.2rem",
                     fontWeight: 600,
+                    letterSpacing: "-0.01em",
                     marginBottom: "1.5rem",
                     color: "var(--accent-light)",
                   }}
@@ -153,7 +157,7 @@ export default function About() {
                     </span>
                   </div>
                 ))}
-              </div>
+              </TiltCard>
             </ScrollReveal>
           </div>
         </div>

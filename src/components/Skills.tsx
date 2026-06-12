@@ -1,6 +1,7 @@
 'use client';
 
 import ScrollReveal from './ScrollReveal';
+import SectionLabel from './SectionLabel';
 
 const skills = [
     { name: 'JavaScript', icon: 'https://cdn.simpleicons.org/javascript/F7DF1E' },
@@ -41,7 +42,7 @@ export default function Skills() {
                 style={{
                     width: 300,
                     height: 300,
-                    background: 'rgba(59,130,246,0.06)',
+                    background: 'rgba(99,102,241,0.06)',
                     bottom: '10%',
                     right: '-8%',
                     animationDelay: '3s',
@@ -50,7 +51,7 @@ export default function Skills() {
 
             <div className="container">
                 <ScrollReveal>
-                    <span className="section-label">✦ Skills & Technologies</span>
+                    <SectionLabel>Skills &amp; Technologies</SectionLabel>
                 </ScrollReveal>
 
                 <ScrollReveal delay={100}>
@@ -66,7 +67,6 @@ export default function Skills() {
                 </ScrollReveal>
 
                 <div
-                    className="stagger-children"
                     style={{
                         display: 'flex',
                         flexWrap: 'wrap',
@@ -74,13 +74,14 @@ export default function Skills() {
                     }}
                 >
                     {skills.map((skill, i) => (
-                        <ScrollReveal key={skill.name} delay={i * 60}>
+                        <ScrollReveal key={skill.name} delay={i * 45}>
                             <div className="skill-badge">
                                 <img
                                     src={skill.icon}
                                     alt={skill.name}
                                     width={18}
                                     height={18}
+                                    loading="lazy"
                                     style={{ flexShrink: 0 }}
                                 />
                                 <span>{skill.name}</span>
