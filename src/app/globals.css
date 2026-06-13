@@ -720,6 +720,171 @@ button {
   display: block;
 }
 
+/* ============= Contact (asymmetric editorial) ============= */
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 4rem;
+  align-items: center;
+}
+
+.contact-lead .section-title {
+  max-width: 12ch;
+}
+
+.contact-lead .section-subtitle {
+  max-width: 46ch;
+}
+
+.contact-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 2rem;
+  padding: 0.5rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.02);
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.contact-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.contact-channels {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.contact-row {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  padding: 1.15rem 1.35rem;
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.008));
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.35s ease, background 0.35s ease, box-shadow 0.35s ease;
+}
+
+/* Gradient wash that slides in on hover */
+.contact-row::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(99, 102, 241, 0.14), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+.contact-row:hover {
+  transform: translateX(6px);
+  border-color: rgba(129, 140, 248, 0.4);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.4), 0 4px 18px rgba(99, 102, 241, 0.12);
+}
+
+.contact-row:hover::before {
+  opacity: 1;
+}
+
+.contact-row-icon {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--accent-light);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.35s ease, color 0.35s ease;
+}
+
+.contact-row:hover .contact-row-icon {
+  transform: scale(1.08) rotate(-4deg);
+  border-color: var(--border-hover);
+  color: var(--accent-violet-light);
+}
+
+.contact-row-body {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.contact-row-label {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.contact-row-handle {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.contact-row:hover .contact-row-handle {
+  color: var(--text-secondary);
+}
+
+.contact-row-arrow {
+  position: relative;
+  z-index: 1;
+  margin-left: auto;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  opacity: 0.5;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    color 0.35s ease, opacity 0.35s ease;
+}
+
+.contact-row:hover .contact-row-arrow {
+  transform: translate(4px, -4px);
+  color: var(--accent-light);
+  opacity: 1;
+}
+
+@media (max-width: 880px) {
+  .contact-grid {
+    grid-template-columns: 1fr;
+    gap: 2.75rem;
+  }
+
+  .contact-lead {
+    text-align: center;
+  }
+
+  .contact-lead .section-title,
+  .contact-lead .section-subtitle {
+    max-width: none;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
 /* Three.js layer */
 .intro-3d-wrap {
   position: absolute;
