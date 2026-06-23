@@ -49,6 +49,13 @@ const projects = [
     image: "/images/projects/deepface.png",
   },
   {
+    name: "Priya Thai Massage",
+    desc: "Luxury Thai massage sanctuary website with online booking, Resend email notifications, ICS calendar attachments, and immersive motion-driven storytelling — serving a premium spa in Domžale, Slovenia.",
+    tags: ["Next.js", "Motion", "Resend", "ICS"],
+    url: "https://priyathaimassage.com",
+    image: "/images/projects/priya-thai-massage.png",
+  },
+  {
     name: "AskYourDB",
     desc: "AI-powered SQL assistant built with LangChain, FastAPI, and GPT-4o.",
     tags: ["Python", "FastAPI", "LangChain", "OpenAI API"],
