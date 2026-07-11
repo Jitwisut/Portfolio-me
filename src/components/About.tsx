@@ -20,7 +20,7 @@ export default function About() {
         style={{
           width: 250,
           height: 250,
-          background: "rgba(168,85,247,0.05)",
+          background: "rgba(219,39,119,0.06)",
           top: "20%",
           left: "-5%",
           animationDelay: "2s",

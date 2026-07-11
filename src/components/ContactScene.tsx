@@ -5,7 +5,7 @@ import { useEffect, useRef } from 'react';
 /**
  * Three.js constellation background for the Contact section:
  * drifting stars connected by lines when close, gently repelled
- * by the cursor. Indigo/violet, additive glow.
+ * by the cursor. Pink/rose, normal blending (bg is light, not dark).
  */
 export default function ContactScene() {
     const mountRef = useRef<HTMLDivElement>(null);
@@ -59,12 +59,12 @@ export default function ContactScene() {
             const starGeo = new THREE.BufferGeometry();
             starGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
             const starMat = new THREE.PointsMaterial({
-                color: 0x9aa5f8,
-                size: 0.07,
+                color: 0xdb2777,
+                size: 0.075,
                 transparent: true,
-                opacity: 0.9,
+                opacity: 0.75,
                 depthWrite: false,
-                blending: THREE.AdditiveBlending,
+                blending: THREE.NormalBlending,
                 sizeAttenuation: true,
             });
             const stars = new THREE.Points(starGeo, starMat);
@@ -90,16 +90,16 @@ export default function ContactScene() {
             const lineMat = new THREE.LineBasicMaterial({
                 vertexColors: true,
                 transparent: true,
-                opacity: 0.55,
+                opacity: 0.4,
                 depthWrite: false,
-                blending: THREE.AdditiveBlending,
+                blending: THREE.NormalBlending,
             });
             const lines = new THREE.LineSegments(lineGeo, lineMat);
             scene.add(lines);
 
             const TH = 1.9; // connect distance
-            const cA = new THREE.Color(0x6366f1);
-            const cB = new THREE.Color(0xa855f7);
+            const cA = new THREE.Color(0xec4899);
+            const cB = new THREE.Color(0x9d174d);
 
             // --- Mouse (world coords on the z=0 plane) ---
             const mouse = { x: 0, y: 0, active: false };
@@ -191,12 +191,18 @@ export default function ContactScene() {
                             linePos[o + 4] = pos[jx + 1];
                             linePos[o + 5] = pos[jx + 2];
                             const mixed = cA.clone().lerp(cB, (pos[ix] / BOUNDS.x + 1) / 2);
-                            lineCol[o] = mixed.r * t;
-                            lineCol[o + 1] = mixed.g * t;
-                            lineCol[o + 2] = mixed.b * t;
-                            lineCol[o + 3] = mixed.r * t;
-                            lineCol[o + 4] = mixed.g * t;
-                            lineCol[o + 5] = mixed.b * t;
+                            // Material opacity is constant (not per-vertex), so fade
+                            // weak connections toward the light page bg, not black —
+                            // fading toward black would leave a gray smudge on white.
+                            const fr = 1 - t * (1 - mixed.r);
+                            const fg = 1 - t * (1 - mixed.g);
+                            const fb = 1 - t * (1 - mixed.b);
+                            lineCol[o] = fr;
+                            lineCol[o + 1] = fg;
+                            lineCol[o + 2] = fb;
+                            lineCol[o + 3] = fr;
+                            lineCol[o + 4] = fg;
+                            lineCol[o + 5] = fb;
                             seg++;
                         }
                     }

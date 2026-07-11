@@ -5,7 +5,15 @@ import ScrollReveal from "./ScrollReveal";
 import SectionLabel from "./SectionLabel";
 import TiltCard from "./TiltCard";
 
-const projects = [
+type Project = {
+  name: string;
+  desc: string;
+  tags: string[];
+  url?: string;
+  image: string;
+};
+
+const projects: Project[] = [
   {
     name: "Tic-Tac-Toe",
     desc: "Real-time multiplayer Tic-Tac-Toe platform featuring live spectating, robust concurrency control, and a Minimax-powered AI opponent.",
@@ -62,6 +70,19 @@ const projects = [
     url: "https://github.com/Jitwisut/AI-Driven-Data-Analytics",
     image: "/images/projects/askyoudb.png",
   },
+  {
+    name: "Wakaclock",
+    desc: "Self-hosted WakaTime replacement written in Rust. Ditches file-extension guessing for tree-sitter AST detection, streams heartbeats through ClickHouse Materialized Views for zero app-level aggregation, and uniquely tracks AI-generated lines vs human keystrokes — so you actually know who wrote your code.",
+    tags: ["Rust", "ClickHouse", "Axum", "tree-sitter", "Tauri"],
+    url: "https://github.com/Jitwisut/wakaclock",
+    image: "/images/projects/wakaclock.png",
+  },
+  {
+    name: "Notification Payment Detection",
+    desc: "MVP PromptPay payment gateway that detects payment without bank API access: a Windows agent reads toast notifications and a LINE PC OCR watcher reads bank slip cards, both signing and posting to a Node.js backend that matches pending payment intents (exact-amount, OCR time-FIFO, or provider-reference strategies) and fires an HMAC-signed webhook back to the merchant.",
+    tags: ["Node.js", "C# / WPF", "OCR", "PromptPay", "HMAC Webhooks"],
+    image: "/images/projects/notification-payment-detection.png",
+  },
 ];
 
 export default function Projects() {
@@ -86,7 +107,20 @@ export default function Projects() {
 
       const N = projects.length;
       const STEP = (Math.PI * 2) / N;
-      const RADIUS = 3.75;
+      const CARD_WIDTH = 3.0;
+      // At 8 cards (the original tuning) a 3.75 radius already gives each
+      // card a comfortable amount of neighbor overlap for the fanned look.
+      // Beyond that, cards are packed tighter than they are wide unless the
+      // radius grows with N — so scale it up to keep a clear gap instead.
+      const BASE_RADIUS = 3.75;
+      const RADIUS =
+        N <= 8
+          ? BASE_RADIUS
+          : (CARD_WIDTH * 1.2) / (2 * Math.sin(STEP / 2));
+      // Keep the front-facing card the same distance from the camera
+      // regardless of radius, so bigger rings don't change how zoomed-in
+      // the active card looks.
+      const CAMERA_Z = RADIUS + 3.55;
 
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(
@@ -95,7 +129,7 @@ export default function Projects() {
         0.1,
         100
       );
-      camera.position.set(0, 0.5, 7.3);
+      camera.position.set(0, 0.5, CAMERA_Z);
       camera.lookAt(0, -0.05, 0);
 
       const renderer = new THREE.WebGLRenderer({
@@ -120,12 +154,12 @@ export default function Projects() {
       const starGeo = new THREE.BufferGeometry();
       starGeo.setAttribute("position", new THREE.BufferAttribute(starPos, 3));
       const starMat = new THREE.PointsMaterial({
-        color: 0x818cf8,
-        size: 0.03,
+        color: 0xdb2777,
+        size: 0.035,
         transparent: true,
-        opacity: 0.5,
+        opacity: 0.45,
         depthWrite: false,
-        blending: THREE.AdditiveBlending,
+        blending: THREE.NormalBlending,
       });
       const stars = new THREE.Points(starGeo, starMat);
       scene.add(stars);
@@ -135,7 +169,7 @@ export default function Projects() {
       scene.add(ring);
 
       const loader = new THREE.TextureLoader();
-      const cardGeo = new THREE.PlaneGeometry(3.0, 1.875);
+      const cardGeo = new THREE.PlaneGeometry(CARD_WIDTH, 1.875);
       const frameGeo = new THREE.PlaneGeometry(3.15, 2.03);
       const cards: {
         mesh: InstanceType<typeof THREE.Mesh>;
@@ -169,9 +203,9 @@ export default function Projects() {
 
         // Glowing frame slightly behind the card
         const frameMat = new THREE.MeshBasicMaterial({
-          color: 0x6366f1,
+          color: 0xec4899,
           transparent: true,
-          opacity: 0.3,
+          opacity: 0.35,
         });
         const frame = new THREE.Mesh(frameGeo, frameMat);
         frame.position.set(
@@ -267,7 +301,8 @@ export default function Projects() {
           const hit = pick(e.clientX, e.clientY);
           if (hit !== null) {
             if (hit === activeStateRef.current) {
-              window.open(projects[hit].url, "_blank", "noopener,noreferrer");
+              const hitUrl = projects[hit].url;
+              if (hitUrl) window.open(hitUrl, "_blank", "noopener,noreferrer");
             } else {
               rotateTo(hit);
             }
@@ -408,27 +443,31 @@ export default function Projects() {
             <div className="console-divider" aria-hidden="true" />
 
             <div key={active} className="console-info">
-              <a
-                href={current.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="console-name"
-              >
-                {current.name}
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+              {current.url ? (
+                <a
+                  href={current.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="console-name"
                 >
-                  <path d="M7 17L17 7" />
-                  <path d="M7 7h10v10" />
-                </svg>
-              </a>
+                  {current.name}
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M7 17L17 7" />
+                    <path d="M7 7h10v10" />
+                  </svg>
+                </a>
+              ) : (
+                <span className="console-name">{current.name}</span>
+              )}
               <p className="console-desc">{current.desc}</p>
               <p className="console-meta">
                 {current.tags.slice(0, 4).join("  ·  ")}
@@ -476,27 +515,33 @@ export default function Projects() {
                   </svg>
                 </button>
               </div>
-              <a
-                href={current.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="console-open"
-              >
-                <span>Open Project</span>
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+              {current.url ? (
+                <a
+                  href={current.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="console-open"
                 >
-                  <path d="M7 17L17 7" />
-                  <path d="M7 7h10v10" />
-                </svg>
-              </a>
+                  <span>Open Project</span>
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M7 17L17 7" />
+                    <path d="M7 7h10v10" />
+                  </svg>
+                </a>
+              ) : (
+                <span className="console-open console-open-private">
+                  Private repository
+                </span>
+              )}
             </div>
           </TiltCard>
         </div>

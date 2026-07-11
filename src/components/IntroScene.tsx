@@ -5,7 +5,7 @@ import { useEffect, useRef } from 'react';
 /**
  * Three.js background for the intro: a slowly tumbling wireframe
  * icosahedron pair inside a drifting particle field, with gentle
- * mouse parallax. Indigo/violet to match the theme.
+ * mouse parallax. Pink/rose to match the theme.
  */
 export default function IntroScene() {
     const mountRef = useRef<HTMLDivElement>(null);
@@ -24,7 +24,7 @@ export default function IntroScene() {
             ).matches;
 
             const scene = new THREE.Scene();
-            scene.fog = new THREE.FogExp2(0x0a0a0f, 0.045);
+            scene.fog = new THREE.FogExp2(0xfdeef5, 0.045);
 
             const camera = new THREE.PerspectiveCamera(
                 60,
@@ -57,12 +57,12 @@ export default function IntroScene() {
                 new THREE.BufferAttribute(positions, 3)
             );
             const particleMat = new THREE.PointsMaterial({
-                color: 0x818cf8,
-                size: 0.04,
+                color: 0xdb2777,
+                size: 0.045,
                 transparent: true,
-                opacity: 0.65,
+                opacity: 0.55,
                 depthWrite: false,
-                blending: THREE.AdditiveBlending,
+                blending: THREE.NormalBlending,
                 sizeAttenuation: true,
             });
             const particles = new THREE.Points(particleGeo, particleMat);
@@ -82,12 +82,12 @@ export default function IntroScene() {
                 new THREE.BufferAttribute(positions2, 3)
             );
             const particleMat2 = new THREE.PointsMaterial({
-                color: 0xc084fc,
-                size: 0.05,
+                color: 0x9d174d,
+                size: 0.055,
                 transparent: true,
-                opacity: 0.5,
+                opacity: 0.45,
                 depthWrite: false,
-                blending: THREE.AdditiveBlending,
+                blending: THREE.NormalBlending,
                 sizeAttenuation: true,
             });
             const particles2 = new THREE.Points(particleGeo2, particleMat2);
@@ -96,10 +96,10 @@ export default function IntroScene() {
             // --- Wireframe geometry pair ---
             const outerGeo = new THREE.IcosahedronGeometry(2.6, 1);
             const outerMat = new THREE.MeshBasicMaterial({
-                color: 0x6366f1,
+                color: 0xec4899,
                 wireframe: true,
                 transparent: true,
-                opacity: 0.22,
+                opacity: 0.35,
             });
             const outer = new THREE.Mesh(outerGeo, outerMat);
             outer.position.set(0, 0, -1.5);
@@ -107,10 +107,10 @@ export default function IntroScene() {
 
             const innerGeo = new THREE.IcosahedronGeometry(1.3, 0);
             const innerMat = new THREE.MeshBasicMaterial({
-                color: 0xa855f7,
+                color: 0x9d174d,
                 wireframe: true,
                 transparent: true,
-                opacity: 0.3,
+                opacity: 0.4,
             });
             const inner = new THREE.Mesh(innerGeo, innerMat);
             inner.position.copy(outer.position);
@@ -119,9 +119,9 @@ export default function IntroScene() {
             // A distant large ring for depth
             const ringGeo = new THREE.TorusGeometry(6.5, 0.012, 8, 120);
             const ringMat = new THREE.MeshBasicMaterial({
-                color: 0x818cf8,
+                color: 0xdb2777,
                 transparent: true,
-                opacity: 0.18,
+                opacity: 0.28,
             });
             const ring = new THREE.Mesh(ringGeo, ringMat);
             ring.position.set(0, 0, -4);
