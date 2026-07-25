@@ -106,31 +106,44 @@ export default function Projects() {
       ).matches;
 
       const N = projects.length;
-      const STEP = (Math.PI * 2) / N;
-      const CARD_WIDTH = 3.0;
-      // At 8 cards (the original tuning) a 3.75 radius already gives each
-      // card a comfortable amount of neighbor overlap for the fanned look.
-      // Beyond that, cards are packed tighter than they are wide unless the
-      // radius grows with N — so scale it up to keep a clear gap instead.
-      const BASE_RADIUS = 3.75;
-      const RADIUS =
-        N <= 8
-          ? BASE_RADIUS
-          : (CARD_WIDTH * 1.2) / (2 * Math.sin(STEP / 2));
-      // Keep the front-facing card the same distance from the camera
-      // regardless of radius, so bigger rings don't change how zoomed-in
-      // the active card looks.
-      const CAMERA_Z = RADIUS + 3.55;
+      // Cards sit on a shallow arc but stay billboarded (facing the camera),
+      // so neighbours recede in depth instead of being sheared into the
+      // unreadable trapezoids a full 360° ring produced.
+      const CANVAS_W = 1280;
+      const CANVAS_H = 860;
+      const CARD_W = 3.6;
+      const CARD_H = CARD_W * (CANVAS_H / CANVAS_W);
+      const ARC_ANGLE = 0.5; // radians of arc between neighbouring cards
+      const ARC_RADIUS = 6.4;
+      const VISIBLE = 2.5; // cards further than this from centre are culled
+      const TILT = 0.09; // a few degrees toward centre — reads curved, no shear
+      const FOV = 45;
 
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(
-        45,
+        FOV,
         stage.clientWidth / stage.clientHeight,
         0.1,
         100
       );
-      camera.position.set(0, 0.5, CAMERA_Z);
-      camera.lookAt(0, -0.05, 0);
+
+      // Frame the active card the same way at every viewport: pull back far
+      // enough to clear its height, and on narrow/portrait stages far enough
+      // to clear its width too (which is what makes it degrade to a clean
+      // one-card-plus-peek carousel on mobile).
+      const fitCamera = () => {
+        const aspect = stage.clientWidth / Math.max(1, stage.clientHeight);
+        const t = 2 * Math.tan((FOV * Math.PI) / 360);
+        camera.aspect = aspect;
+        camera.position.set(
+          0,
+          0.06,
+          Math.max((CARD_H * 1.4) / t, (CARD_W * 1.15) / (t * aspect))
+        );
+        camera.lookAt(0, 0, 0);
+        camera.updateProjectionMatrix();
+      };
+      fitCamera();
 
       const renderer = new THREE.WebGLRenderer({
         antialias: true,
@@ -164,71 +177,164 @@ export default function Projects() {
       const stars = new THREE.Points(starGeo, starMat);
       scene.add(stars);
 
-      // Ring of project cards
-      const ring = new THREE.Group();
-      scene.add(ring);
+      // --- Cards: each one is a browser window painted into a canvas texture,
+      // so the screenshot arrives already framed, rounded and labelled. ---
+      const PAD = 44; // canvas margin the drop shadow bleeds into
+      const BAR_H = 72;
 
-      const loader = new THREE.TextureLoader();
-      const cardGeo = new THREE.PlaneGeometry(CARD_WIDTH, 1.875);
-      const frameGeo = new THREE.PlaneGeometry(3.15, 2.03);
+      const rr = (
+        ctx: CanvasRenderingContext2D,
+        x: number,
+        y: number,
+        w: number,
+        h: number,
+        r: number
+      ) => {
+        ctx.beginPath();
+        if (typeof ctx.roundRect === "function") {
+          ctx.roundRect(x, y, w, h, r);
+          return;
+        }
+        ctx.moveTo(x + r, y);
+        ctx.arcTo(x + w, y, x + w, y + h, r);
+        ctx.arcTo(x + w, y + h, x, y + h, r);
+        ctx.arcTo(x, y + h, x, y, r);
+        ctx.arcTo(x, y, x + w, y, r);
+        ctx.closePath();
+      };
+
+      const hostLabel = (p: Project) => {
+        if (!p.url) return "private repository";
+        try {
+          const u = new URL(p.url);
+          const host = u.hostname.replace(/^www\./, "");
+          // Bare "github.com" would label four different cards identically —
+          // keep the repo path so every neighbour stays identifiable.
+          const repo = u.pathname.split("/").filter(Boolean).slice(0, 2).join("/");
+          return host === "github.com" && repo ? `${host}/${repo}` : host;
+        } catch {
+          return p.name.toLowerCase();
+        }
+      };
+
+      const paintCard = (
+        ctx: CanvasRenderingContext2D,
+        p: Project,
+        img: HTMLImageElement | null
+      ) => {
+        const w = CANVAS_W - PAD * 2;
+        const h = CANVAS_H - PAD * 2;
+        ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+
+        ctx.save();
+        ctx.shadowColor = "rgba(190, 24, 93, 0.26)";
+        ctx.shadowBlur = 38;
+        ctx.shadowOffsetY = 16;
+        ctx.fillStyle = "#ffffff";
+        rr(ctx, PAD, PAD, w, h, 26);
+        ctx.fill();
+        ctx.restore();
+
+        ctx.save();
+        rr(ctx, PAD, PAD, w, h, 26);
+        ctx.clip();
+
+        // Screenshot, cover-fitted below the chrome bar and top-aligned so the
+        // interesting part of a tall page stays visible.
+        const cy = PAD + BAR_H;
+        const ch = h - BAR_H;
+        if (img && img.naturalWidth) {
+          const s = Math.max(w / img.naturalWidth, ch / img.naturalHeight);
+          const dw = img.naturalWidth * s;
+          ctx.drawImage(img, PAD + (w - dw) / 2, cy, dw, img.naturalHeight * s);
+        } else {
+          const g = ctx.createLinearGradient(PAD, cy, PAD + w, cy + ch);
+          g.addColorStop(0, "#FDF2F8");
+          g.addColorStop(1, "#FCE7F3");
+          ctx.fillStyle = g;
+          ctx.fillRect(PAD, cy, w, ch);
+        }
+
+        // Browser chrome bar
+        ctx.fillStyle = "#FFF5F9";
+        ctx.fillRect(PAD, PAD, w, BAR_H);
+        ctx.fillStyle = "rgba(219, 39, 119, 0.14)";
+        ctx.fillRect(PAD, PAD + BAR_H - 1, w, 1);
+        ["#F472B6", "#F9A8D4", "#FBCFE8"].forEach((c, i) => {
+          ctx.beginPath();
+          ctx.arc(PAD + 32 + i * 27, PAD + BAR_H / 2, 8, 0, Math.PI * 2);
+          ctx.fillStyle = c;
+          ctx.fill();
+        });
+        const pillX = PAD + 124;
+        ctx.fillStyle = "#ffffff";
+        rr(ctx, pillX, PAD + 15, w - 164, BAR_H - 30, 21);
+        ctx.fill();
+        ctx.fillStyle = "#9D174D";
+        ctx.font =
+          '400 24px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+        ctx.textBaseline = "middle";
+        ctx.fillText(hostLabel(p), pillX + 24, PAD + BAR_H / 2 + 1);
+        ctx.restore();
+
+        ctx.strokeStyle = "rgba(219, 39, 119, 0.2)";
+        ctx.lineWidth = 2;
+        rr(ctx, PAD + 1, PAD + 1, w - 2, h - 2, 25);
+        ctx.stroke();
+      };
+
+      const cardGeo = new THREE.PlaneGeometry(CARD_W, CARD_H);
+      const maxAniso = renderer.capabilities.getMaxAnisotropy();
       const cards: {
         mesh: InstanceType<typeof THREE.Mesh>;
-        frameMat: InstanceType<typeof THREE.MeshBasicMaterial>;
         mat: InstanceType<typeof THREE.MeshBasicMaterial>;
       }[] = [];
-      const disposables: { dispose: () => void }[] = [
-        starGeo,
-        starMat,
-        cardGeo,
-        frameGeo,
-      ];
+      const disposables: { dispose: () => void }[] = [starGeo, starMat, cardGeo];
+      const pendingImages: HTMLImageElement[] = [];
 
       projects.forEach((p, i) => {
-        const a = i * STEP;
+        const canvas = document.createElement("canvas");
+        canvas.width = CANVAS_W;
+        canvas.height = CANVAS_H;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+        paintCard(ctx, p, null);
 
+        const tex = new THREE.CanvasTexture(canvas);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.anisotropy = maxAniso;
         const mat = new THREE.MeshBasicMaterial({
-          color: 0xffffff,
+          map: tex,
           transparent: true,
-        });
-        loader.load(p.image, (tex) => {
-          tex.colorSpace = THREE.SRGBColorSpace;
-          mat.map = tex;
-          mat.needsUpdate = true;
+          depthWrite: false,
         });
         const mesh = new THREE.Mesh(cardGeo, mat);
-        mesh.position.set(Math.sin(a) * RADIUS, 0, Math.cos(a) * RADIUS);
-        mesh.rotation.y = a;
         mesh.userData.index = i;
-        ring.add(mesh);
+        scene.add(mesh);
 
-        // Glowing frame slightly behind the card
-        const frameMat = new THREE.MeshBasicMaterial({
-          color: 0xec4899,
-          transparent: true,
-          opacity: 0.35,
-        });
-        const frame = new THREE.Mesh(frameGeo, frameMat);
-        frame.position.set(
-          Math.sin(a) * (RADIUS - 0.03),
-          0,
-          Math.cos(a) * (RADIUS - 0.03)
-        );
-        frame.rotation.y = a;
-        ring.add(frame);
+        const img = new Image();
+        img.onload = () => {
+          if (disposed) return;
+          paintCard(ctx, p, img);
+          tex.needsUpdate = true;
+        };
+        img.src = p.image;
+        pendingImages.push(img);
 
-        cards.push({ mesh, frameMat, mat });
-        disposables.push(mat, frameMat);
+        cards.push({ mesh, mat });
+        disposables.push(mat, tex);
       });
 
-      // --- Rotation state ---
-      let rot = 0;
-      let targetRot = 0;
+      // --- Position state (a continuous, unbounded card index) ---
+      let pos = 0;
+      let targetPos = 0;
 
-      const indexFromTarget = () =>
-        ((Math.round(-targetRot / STEP) % N) + N) % N;
+      // Shortest signed distance from card `i` to the centre, so the wall
+      // wraps around instead of dead-ending at the first and last project.
+      const wrapDelta = (d: number) => (((d + N / 2) % N) + N) % N - N / 2;
 
       const syncActive = () => {
-        const idx = indexFromTarget();
+        const idx = ((Math.round(targetPos) % N) + N) % N;
         if (idx !== activeStateRef.current) {
           activeStateRef.current = idx;
           setActive(idx);
@@ -236,18 +342,16 @@ export default function Projects() {
       };
 
       goRef.current = (dir: number) => {
-        targetRot -= dir * STEP;
+        targetPos += dir;
         syncActive();
       };
 
-      // Rotate so card `i` faces the camera via the shortest path
-      const rotateTo = (i: number) => {
-        const base = -i * STEP;
-        const turns = Math.round((targetRot - base) / (Math.PI * 2));
-        targetRot = base + turns * Math.PI * 2;
+      // Bring card `i` to the centre via the shortest path
+      const centerOn = (i: number) => {
+        targetPos = i + Math.round((targetPos - i) / N) * N;
         syncActive();
       };
-      jumpRef.current = rotateTo;
+      jumpRef.current = centerOn;
 
       // --- Pointer interaction (drag to spin, click to focus/open) ---
       // Move/up listeners live on window so a drag can leave the canvas
@@ -265,7 +369,7 @@ export default function Projects() {
         ndc.y = -(((clientY - r.top) / r.height) * 2 - 1);
         raycaster.setFromCamera(ndc, camera);
         const hits = raycaster.intersectObjects(
-          cards.map((c) => c.mesh),
+          cards.filter((c) => c.mesh.visible).map((c) => c.mesh),
           false
         );
         return hits.length ? (hits[0].object.userData.index as number) : null;
@@ -289,7 +393,8 @@ export default function Projects() {
         const dx = e.clientX - lastX;
         lastX = e.clientX;
         moved += Math.abs(dx);
-        targetRot += dx * 0.006;
+        // Dragging roughly one card-width across the stage advances one card.
+        targetPos -= dx / (stage.clientWidth * 0.34);
       };
 
       const onWindowUp = (e: PointerEvent) => {
@@ -304,13 +409,13 @@ export default function Projects() {
               const hitUrl = projects[hit].url;
               if (hitUrl) window.open(hitUrl, "_blank", "noopener,noreferrer");
             } else {
-              rotateTo(hit);
+              centerOn(hit);
             }
             return;
           }
         }
         // Snap to the nearest card after a drag
-        targetRot = Math.round(targetRot / STEP) * STEP;
+        targetPos = Math.round(targetPos);
         syncActive();
       };
 
@@ -322,8 +427,7 @@ export default function Projects() {
 
       const onResize = () => {
         if (!stage.clientWidth || !stage.clientHeight) return;
-        camera.aspect = stage.clientWidth / stage.clientHeight;
-        camera.updateProjectionMatrix();
+        fitCamera();
         renderer.setSize(stage.clientWidth, stage.clientHeight);
       };
       window.addEventListener("resize", onResize);
@@ -347,17 +451,25 @@ export default function Projects() {
         if (!inView) return;
         const dt = clock.getDelta();
 
-        rot += (targetRot - rot) * (reduced ? 1 : 0.09);
-        ring.rotation.y = rot;
+        pos += (targetPos - pos) * (reduced ? 1 : 0.12);
         stars.rotation.y += dt * 0.01;
 
-        cards.forEach(({ mesh, mat, frameMat }, i) => {
-          const facing = Math.cos(i * STEP + rot);
-          const lift = Math.max(0, facing);
-          mat.opacity = 0.28 + 0.72 * Math.max(0, (facing + 0.45) / 1.45);
-          frameMat.opacity = 0.1 + 0.5 * lift * lift;
-          const s = 0.86 + 0.17 * lift;
-          mesh.scale.setScalar(s);
+        cards.forEach(({ mesh, mat }, i) => {
+          const d = wrapDelta(i - pos);
+          const ad = Math.abs(d);
+          mesh.visible = ad <= VISIBLE;
+          if (!mesh.visible) return;
+
+          const a = d * ARC_ANGLE;
+          mesh.position.set(
+            Math.sin(a) * ARC_RADIUS,
+            0,
+            (Math.cos(a) - 1) * ARC_RADIUS
+          );
+          mesh.rotation.y = -d * TILT;
+          mesh.scale.setScalar(1 - ad * 0.07);
+          mat.opacity =
+            ad <= 1 ? 1 - ad * 0.2 : Math.max(0, 0.8 - (ad - 1) * 0.55);
         });
 
         renderer.render(scene, camera);
@@ -373,7 +485,9 @@ export default function Projects() {
         window.removeEventListener("pointermove", onWindowMove);
         window.removeEventListener("pointerup", onWindowUp);
         window.removeEventListener("pointercancel", onWindowUp);
-        cards.forEach(({ mat }) => mat.map?.dispose());
+        pendingImages.forEach((img) => {
+          img.onload = null;
+        });
         disposables.forEach((d) => d.dispose());
         renderer.dispose();
         if (canvas.parentNode === stage) stage.removeChild(canvas);
@@ -406,8 +520,8 @@ export default function Projects() {
 
         <ScrollReveal delay={150}>
           <p className="section-subtitle">
-            Drag the ring, or tap a card to bring it forward — tap the front
-            card to open the project.
+            Drag sideways, or tap a card to bring it to the front — tap the
+            front card to open the project.
           </p>
         </ScrollReveal>
       </div>
@@ -415,29 +529,16 @@ export default function Projects() {
       <ScrollReveal delay={200}>
         <div ref={stageRef} className="ring-stage" aria-hidden="true" />
 
-        {/* Glass console floating over the bottom edge of the stage */}
+        {/* Caption sits below the stage so it never crops the active card */}
         <div className="ring-console-wrap">
           <TiltCard maxTilt={2.5} className="glass spotlight-card ring-console">
             <div className="console-index">
-              <div>
-                <span key={active} className="console-num">
-                  {String(active + 1).padStart(2, "0")}
-                </span>
-                <span className="console-total">
-                  {" "}
-                  / {String(projects.length).padStart(2, "0")}
-                </span>
-              </div>
-              <div className="console-dots">
-                {projects.map((p, i) => (
-                  <button
-                    key={p.name}
-                    className={`console-dot ${i === active ? "on" : ""}`}
-                    aria-label={`Go to ${p.name}`}
-                    onClick={() => jumpRef.current(i)}
-                  />
-                ))}
-              </div>
+              <span key={active} className="console-num">
+                {String(active + 1).padStart(2, "0")}
+              </span>
+              <span className="console-total">
+                / {String(projects.length).padStart(2, "0")}
+              </span>
             </div>
 
             <div className="console-divider" aria-hidden="true" />
@@ -542,6 +643,18 @@ export default function Projects() {
                   Private repository
                 </span>
               )}
+            </div>
+
+            <div className="console-dots">
+              {projects.map((p, i) => (
+                <button
+                  key={p.name}
+                  className={`console-dot ${i === active ? "on" : ""}`}
+                  aria-label={`Go to ${p.name}`}
+                  aria-current={i === active}
+                  onClick={() => jumpRef.current(i)}
+                />
+              ))}
             </div>
           </TiltCard>
         </div>

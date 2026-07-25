@@ -367,10 +367,10 @@ button {
   z-index: 1;
 }
 
-/* ============= Project Ring (Three.js 3D carousel) ============= */
+/* ============= Project Wall (Three.js curved gallery) ============= */
 .ring-stage {
   position: relative;
-  height: clamp(440px, 64vh, 700px);
+  height: clamp(420px, 58vh, 620px);
   margin-top: 0.5rem;
   overflow: hidden;
 }
@@ -379,12 +379,12 @@ button {
   display: block;
 }
 
-/* --- Glass console floating over the stage's bottom edge --- */
+/* --- Caption below the stage (never overlaps the active card) --- */
 .ring-console-wrap {
   position: relative;
   z-index: 20;
-  max-width: 940px;
-  margin: -72px auto 0;
+  max-width: 1000px;
+  margin: 1.25rem auto 0;
   padding: 0 1.5rem;
 }
 
@@ -392,9 +392,9 @@ button {
   display: grid;
   grid-template-columns: auto 1px 1fr 1px auto;
   align-items: center;
-  gap: 1.6rem;
+  gap: 1.1rem 1.6rem;
   border-radius: 22px;
-  padding: 1.5rem 1.9rem;
+  padding: 1.4rem 1.9rem 0.9rem;
   box-shadow:
     0 20px 50px rgba(219, 39, 119, 0.14),
     0 6px 20px rgba(0, 0, 0, 0.05),
@@ -403,8 +403,8 @@ button {
 
 .console-index {
   display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
+  align-items: baseline;
+  gap: 0.4rem;
   min-width: 104px;
 }
 
@@ -428,19 +428,27 @@ button {
 }
 
 .console-dots {
+  grid-column: 1 / -1;
   display: flex;
-  gap: 0.3rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0;
+  border-top: 1px solid rgba(219, 39, 119, 0.1);
+  padding-top: 0.1rem;
 }
 
+/* 30x44 hit area around an 8px dot — comfortably tappable without a
+   300px-wide row of giant circles. */
 .console-dot {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
+  width: 30px;
+  height: 44px;
   padding: 0;
   background: transparent;
   border: none;
+  cursor: pointer;
 }
 
 .console-dot::after {
@@ -590,18 +598,18 @@ button {
 
 @media (max-width: 880px) {
   .ring-stage {
-    height: clamp(340px, 48vh, 460px);
+    height: clamp(300px, 40vh, 380px);
   }
 
   .ring-console-wrap {
-    margin-top: -36px;
+    margin-top: 1rem;
     padding: 0 1rem;
   }
 
   .ring-console {
     grid-template-columns: 1fr;
     gap: 1.1rem;
-    padding: 1.25rem 1.4rem;
+    padding: 1.25rem 1.4rem 0.75rem;
   }
 
   .console-divider {
@@ -611,10 +619,12 @@ button {
   }
 
   .console-index {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
+    align-items: baseline;
     width: 100%;
+  }
+
+  .console-dots {
+    grid-column: auto;
   }
 
   .console-controls {
