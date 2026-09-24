@@ -97,24 +97,26 @@ export default function ProjectDialog({
         onClick={close}
         aria-hidden
       />
+      {!leaving && <div className="door-flash" aria-hidden />}
       <div
         ref={scroller}
         data-lenis-prevent
         className={`absolute inset-0 overflow-y-auto overscroll-contain bg-panel sm:inset-4 lg:inset-6 ${leaving ? "door-close" : "door-open"}`}
       >
         {/* Bar */}
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-fg/10 bg-panel/95 px-5 py-4 sm:px-8">
-          <p className="eyebrow">
-            Exhibit {pad(index + 1)} / {pad(projects.length)}
+        <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-fg/10 bg-panel/95 px-4 py-3 sm:px-8 sm:py-4">
+          <p className="eyebrow whitespace-nowrap tabular-nums">
+            <span className="max-sm:hidden">Exhibit </span>
+            {pad(index + 1)} / {pad(projects.length)}
           </p>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             <button type="button" onClick={() => onNavigate(prev)} className="px-3 py-2 font-mono text-[0.7rem] tracking-[0.12em] uppercase hover:text-accent" aria-label={`Previous: ${projects[prev].name}`}>
-              ← Prev
+              ←<span className="max-sm:hidden"> Prev</span>
             </button>
             <button type="button" onClick={() => onNavigate(next)} className="px-3 py-2 font-mono text-[0.7rem] tracking-[0.12em] uppercase hover:text-accent" aria-label={`Next: ${projects[next].name}`}>
-              Next →
+              <span className="max-sm:hidden">Next </span>→
             </button>
-            <button type="button" data-autofocus onClick={close} className="btn ml-2 !px-4 !py-2" data-cursor="Close">
+            <button type="button" data-autofocus onClick={close} className="btn ml-1 !px-4 !py-2 whitespace-nowrap sm:ml-2" data-cursor="Close">
               Close ✕
             </button>
           </div>
@@ -142,8 +144,8 @@ export default function ProjectDialog({
                   </div>
                 </div>
               )}
-              <figcaption className="eyebrow mt-3 flex justify-between">
-                <span>{p.name}</span>
+              <figcaption className="eyebrow mt-3 flex justify-between gap-4">
+                <span className="max-sm:hidden">{p.name}</span>
                 <span>{p.live ? new URL(p.live).hostname : p.github ? "github.com" : "Private build"}</span>
               </figcaption>
             </figure>
