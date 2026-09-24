@@ -5,6 +5,7 @@ import gsap from "gsap";
 import { projects } from "@/data/projects";
 import { day } from "@/lib/day";
 import { goToY } from "@/components/DayController";
+import Image from "next/image";
 import ProjectDialog from "@/components/ui/ProjectDialog";
 
 const N = projects.length;
@@ -51,16 +52,17 @@ export default function Works() {
       id="projects"
       data-hour-start="12"
       data-hour-end="16"
-      className="relative"
-      style={{ height: `${100 + N * 70}svh` }}
+      // Scroll length per bay: shorter on phones so a swipe moves ~one exhibit.
+      className="relative h-[calc(100svh+var(--bays)*38svh)] md:h-[calc(100svh+var(--bays)*70svh)]"
+      style={{ "--bays": N } as React.CSSProperties}
       aria-labelledby="works-title"
     >
       <div className="sticky top-0 h-svh px-5 pt-20 pb-24 sm:px-10 sm:pt-24 sm:pb-10 lg:px-14">
         <div className="flex items-baseline justify-between">
           <h2 id="works-title" className="eyebrow">
-            12:00 → 16:00 — Works, in the colonnade
+            12:00<span className="max-sm:hidden"> → 16:00</span> — Works<span className="max-sm:hidden">, in the colonnade</span>
           </h2>
-          <p className="font-mono text-sm tabular-nums" aria-live="polite">
+          <p className="font-mono text-sm whitespace-nowrap tabular-nums" aria-live="polite">
             <span className="text-fg">{pad(active + 1)}</span>
             <span className="text-fg-soft"> / {pad(N)}</span>
           </p>
@@ -96,16 +98,33 @@ export default function Works() {
 
         {/* Wall label */}
         <div className="absolute inset-x-4 bottom-24 sm:inset-x-auto sm:bottom-10 sm:left-10 sm:w-[27rem] lg:left-14">
-          <article key={p.slug} className="panel p-5 sm:p-7">
+          <article key={p.slug} className="panel p-4 sm:p-7">
+            {/* On phones the exhibits in the 3D scene are too small to read,
+                so the label carries the screenshot itself. Tap to enter. */}
+            <button
+              type="button"
+              onClick={() => setOpen(active)}
+              className="unveil relative mb-4 block aspect-[16/9] w-full overflow-hidden border border-fg/10 bg-[#2a2521] md:hidden"
+              aria-label={`Open ${p.name}`}
+            >
+              {p.texture ? (
+                <Image src={p.texture} alt="" fill sizes="100vw" className="object-cover object-top" />
+              ) : (
+                <span className="grid h-full place-items-center font-display text-4xl tracking-tight text-[#efe6d8]">{p.name}</span>
+              )}
+              <span className="absolute right-2 bottom-2 bg-black/55 px-2 py-1 font-mono text-[0.62rem] tracking-[0.12em] text-white uppercase">
+                Tap to view
+              </span>
+            </button>
             <div className="unveil">
               <p className="eyebrow flex justify-between">
                 <span>Bay {pad(active + 1)}</span>
                 <span>{p.stack.slice(0, 2).join(" · ")}</span>
               </p>
-              <h3 className="mt-3 font-display text-[clamp(1.9rem,3.4vw,2.9rem)] leading-[0.95] tracking-[-0.025em]">{p.name}</h3>
-              <p className="mt-3 text-[0.95rem] leading-relaxed text-fg-soft">{p.summary}</p>
+              <h3 className="mt-2 font-display text-[clamp(1.7rem,3.4vw,2.9rem)] leading-[0.95] tracking-[-0.025em] sm:mt-3">{p.name}</h3>
+              <p className="mt-2 text-[0.95rem] leading-relaxed text-fg-soft sm:mt-3 [@media(max-height:720px)]:max-md:hidden">{p.summary}</p>
             </div>
-            <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-3">
+            <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-3 sm:mt-5">
               <button
                 ref={openerRef}
                 type="button"

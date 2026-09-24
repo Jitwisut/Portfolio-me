@@ -27,6 +27,10 @@ export default function DayController() {
     gsap.registerPlugin(ScrollTrigger);
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     day.reduced = reduced;
+    // Touch scrolling is already native and direct; a heavy damp on top of it
+    // makes the scene feel like it lags behind the finger.
+    const touch = window.matchMedia("(pointer: coarse)").matches;
+    const damping = touch ? 9 : 4.5;
     const root = document.documentElement;
 
     let lenis: Lenis | undefined;
@@ -80,7 +84,7 @@ export default function DayController() {
       lenis?.raf(time * 1000);
       const dt = Math.min(deltaMs / 1000, 0.1);
       const prev = day.hour;
-      day.hour = reduced ? day.target : prev + (day.target - prev) * (1 - Math.exp(-dt * 4.5));
+      day.hour = reduced ? day.target : prev + (day.target - prev) * (1 - Math.exp(-dt * damping));
       if (Math.abs(day.target - day.hour) < 0.0005) day.hour = day.target;
       if (Math.abs(day.hour - lastWritten) > 0.0008) {
         writeCssVars(root, palette(day.hour), day.hour);
@@ -135,6 +139,7 @@ export function goTo(id: string, opts: { immediate?: boolean } = {}) {
 
 /** Scroll to an absolute y position. */
 export function goToY(y: number, opts: { force?: boolean } = {}) {
-  if (window.__lenis) window.__lenis.scrollTo(y, { duration: 1.4, force: opts.force });
+  const duration = window.matchMedia("(pointer: coarse)").matches ? 0.8 : 1.4;
+  if (window.__lenis) window.__lenis.scrollTo(y, { duration, force: opts.force });
   else window.scrollTo({ top: y, behavior: day.reduced ? "auto" : "smooth" });
 }
