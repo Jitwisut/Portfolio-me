@@ -1,30 +1,36 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { Fraunces, Hanken_Grotesk, IBM_Plex_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
-import { Analytics } from "@vercel/analytics/next"
+
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  axes: ["SOFT", "WONK", "opsz"],
+  variable: "--font-fraunces",
+  display: "swap",
+});
+const hanken = Hanken_Grotesk({ subsets: ["latin"], variable: "--font-hanken", display: "swap" });
+const plexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-plex-mono",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "Portfolio of Jitwisut",
+  title: "Jitwisut Thobut — One Day at the Pavilion",
   description:
-    "Jitwisut is a fullstack developer and designer. Known for his work in web development, he specializes in creating intuitive and aesthetically pleasing user interfaces.",
-  keywords: [
-    "Jitwisut",
-    "Fullstack Developer",
-    "Designer",
-    "Web Developer",
-    "Portfolio",
-    "Next.js",
-    "React",
-    "ElysiaJS",
-    "Bun"
-  ],
+    "Portfolio of Jitwisut Thobut, full-stack developer and interface designer. Spend a day at a small concrete pavilion — from sunrise to the last light on.",
+  keywords: ["Jitwisut", "Fullstack Developer", "Designer", "Web Developer", "Portfolio", "Next.js", "React", "Three.js", "ElysiaJS", "Bun"],
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export const viewport: Viewport = {
+  themeColor: "#e9d3bf",
+};
+
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={`${fraunces.variable} ${hanken.variable} ${plexMono.variable}`} suppressHydrationWarning>
       <body suppressHydrationWarning>
         {children}
         <Analytics />
