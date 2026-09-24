@@ -1,34 +1,29 @@
-import Navbar from '@/components/Navbar';
-import Intro from '@/components/Intro';
-import About from '@/components/About';
-import Skills from '@/components/Skills';
-import Projects from '@/components/Projects';
-import Contact from '@/components/Contact';
-import Footer from '@/components/Footer';
-import SmoothScroll from '@/components/SmoothScroll';
+import DayController from "@/components/DayController";
+import StageLayer from "@/components/scene/StageLayer";
+import Loader from "@/components/ui/Loader";
+import Sundial from "@/components/ui/Sundial";
+import Cursor from "@/components/ui/Cursor";
+import Intro from "@/components/sections/Intro";
+import About from "@/components/sections/About";
+import Works from "@/components/sections/Works";
+import Experience from "@/components/sections/Experience";
+import Contact from "@/components/sections/Contact";
 
 export default function Home() {
   return (
-    <SmoothScroll>
-      <Navbar />
-      <main>
-        {/* Scroll-over container: the Intro statement stays pinned while the
-            dark content scrolls up over it. On scroll the statement spins,
-            its letters scatter apart and it fades away. */}
-        <div className="scroll-over-wrapper">
-          <div className="sticky-hero">
-            <Intro />
-          </div>
-
-          <div className="overlay-content">
-            <About />
-            <Skills />
-            <Projects />
-            <Contact />
-            <Footer />
-          </div>
-        </div>
+    <>
+      <DayController />
+      <StageLayer />
+      <Loader />
+      <Sundial />
+      <Cursor />
+      <main className="relative z-10">
+        <Intro />
+        <About />
+        <Works />
+        <Experience />
+        <Contact />
       </main>
-    </SmoothScroll>
+    </>
   );
 }
