@@ -85,7 +85,7 @@ export default function Sundial() {
       {/* Header */}
       <header className="pointer-events-none fixed inset-x-0 top-0 z-50 flex items-start justify-between px-5 pt-5 sm:px-10 sm:pt-7 lg:px-14">
         {/* A soft band of the current sky so the header reads over any scene */}
-        <div className="absolute inset-x-0 top-0 -z-10 h-24 bg-gradient-to-b from-panel/90 via-panel/60 to-transparent sm:h-28 sm:from-panel/75 sm:via-panel/40" aria-hidden />
+        <div className="absolute inset-x-0 top-0 -z-10 h-20 bg-gradient-to-b from-panel from-40% via-panel/70 to-transparent sm:h-28 sm:from-panel/75 sm:from-0% sm:via-panel/40" aria-hidden />
         <a href="#home" onClick={jump("home")} className="pointer-events-auto font-display text-lg leading-none tracking-tight sm:text-xl" data-cursor="Top">
           {profile.first}
           <span className="text-fg-soft"> {profile.last}</span>

@@ -167,13 +167,27 @@ export function formatHour(h: number) {
 
 const toCss = (c: Rgb) => `${Math.round(c[0] * 255)} ${Math.round(c[1] * 255)} ${Math.round(c[2] * 255)}`;
 
-/** Push the current palette into CSS custom properties (space-separated RGB). */
+const INK_DARK = hex("#1e1a16");
+const INK_DARK_SOFT = hex("#57504a");
+const INK_LIGHT = hex("#f2e9dc");
+const INK_LIGHT_SOFT = hex("#b3a99d");
+const ACCENT_ON_LIGHT = hex("#9e3f1d");
+const ACCENT_ON_DARK = hex("#ffc46b");
+
+/**
+ * Push the current palette into CSS custom properties (space-separated RGB).
+ * Ink is picked from the panel's brightness rather than interpolated with it:
+ * when the panel passes through mid-grey at dusk, the text has already
+ * switched sides, so contrast never collapses.
+ */
 export function writeCssVars(root: HTMLElement, p: Palette, h: number) {
   const s = root.style;
-  s.setProperty("--fg", toCss(p.fg));
-  s.setProperty("--fg-soft", toCss(p.fgSoft));
+  const lum = 0.2126 * p.panel[0] + 0.7152 * p.panel[1] + 0.0722 * p.panel[2];
+  const dark = smooth(clamp01((0.5 - lum) / 0.06));
+  s.setProperty("--fg", toCss(mix(INK_DARK, INK_LIGHT, dark)));
+  s.setProperty("--fg-soft", toCss(mix(INK_DARK_SOFT, INK_LIGHT_SOFT, dark)));
   s.setProperty("--panel", toCss(p.panel));
-  s.setProperty("--accent", toCss(p.accent));
+  s.setProperty("--accent", toCss(mix(ACCENT_ON_LIGHT, ACCENT_ON_DARK, dark)));
   s.setProperty("--sky-top", toCss(p.skyTop));
   s.setProperty("--sky-horizon", toCss(p.skyHorizon));
   // Shadow direction for DOM elements (cursor shadow, cast-shadow type).
