@@ -20,13 +20,18 @@ export default function Works() {
   const section = useRef<HTMLElement>(null);
   const [active, setActive] = useState(0);
   const [open, setOpen] = useState<number | null>(null);
+  /** Direction of travel, so the next card swings in from the right side. */
+  const [dir, setDir] = useState(1);
   const openerRef = useRef<HTMLButtonElement>(null);
+  const card = useRef<HTMLDivElement>(null);
+  const drag = useRef({ x: 0, y: 0, dx: 0, id: -1, axis: "" as "" | "x" | "y", moved: false });
 
   useEffect(() => {
     let last = -1;
     const tick = () => {
       const i = Math.round(day.works * (N - 1));
       if (i !== last) {
+        setDir(i >= last ? 1 : -1);
         last = i;
         setActive(i);
       }
@@ -42,6 +47,38 @@ export default function Works() {
     const top = el.getBoundingClientRect().top + window.scrollY;
     const span = el.offsetHeight - window.innerHeight;
     goToY(top + (span * i) / (N - 1), { force });
+  };
+
+  /* Swipe the card on phones: it turns in 3D under the finger, and a long
+     enough flick walks to the neighbouring bay. Vertical drags stay scrolls. */
+  const onDown = (e: React.PointerEvent) => {
+    drag.current = { x: e.clientX, y: e.clientY, dx: 0, id: e.pointerId, axis: "", moved: false };
+    if (card.current) card.current.style.transition = "none";
+  };
+  const onMove = (e: React.PointerEvent) => {
+    const d = drag.current;
+    if (d.id !== e.pointerId || !card.current) return;
+    const dx = e.clientX - d.x;
+    const dy = e.clientY - d.y;
+    if (!d.axis && Math.hypot(dx, dy) > 8) d.axis = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
+    if (d.axis !== "x") return;
+    d.dx = dx;
+    d.moved = true;
+    const t = Math.max(-1, Math.min(1, dx / 220));
+    card.current.style.transform = `perspective(900px) translate3d(${(dx * 0.45).toFixed(1)}px,0,${(-Math.abs(t) * 60).toFixed(1)}px) rotateY(${(t * 28).toFixed(2)}deg)`;
+  };
+  const onUp = (e: React.PointerEvent) => {
+    const d = drag.current;
+    if (d.id !== e.pointerId) return;
+    d.id = -1;
+    if (card.current) {
+      card.current.style.transition = "transform 0.6s var(--ease-out)";
+      card.current.style.transform = "";
+    }
+    if (d.axis === "x" && Math.abs(d.dx) > 56) {
+      const next = Math.max(0, Math.min(N - 1, active + (d.dx < 0 ? 1 : -1)));
+      if (next !== active) walkTo(next);
+    }
   };
 
   const p = projects[active];
@@ -101,10 +138,22 @@ export default function Works() {
           <article key={p.slug} className="panel p-4 sm:p-7">
             {/* On phones the exhibits in the 3D scene are too small to read,
                 so the label carries the screenshot itself. Tap to enter. */}
+            <div
+              ref={card}
+              className="relative mb-4 touch-pan-y md:hidden"
+              onPointerDown={onDown}
+              onPointerMove={onMove}
+              onPointerUp={onUp}
+              onPointerCancel={onUp}
+            >
             <button
               type="button"
-              onClick={() => setOpen(active)}
-              className="unveil relative mb-4 block aspect-[16/9] w-full overflow-hidden border border-fg/10 bg-[#2a2521] md:hidden"
+              onClick={() => {
+                if (drag.current.moved) return;
+                setOpen(active);
+              }}
+              className="swing-in relative block aspect-[16/9] w-full overflow-hidden border border-fg/10 bg-[#2a2521] shadow-[0_24px_40px_-24px_rgb(0_0_0/0.55)]"
+              style={{ "--dir": dir } as React.CSSProperties}
               aria-label={`Open ${p.name}`}
             >
               {p.texture ? (
@@ -113,9 +162,10 @@ export default function Works() {
                 <span className="grid h-full place-items-center font-display text-4xl tracking-tight text-[#efe6d8]">{p.name}</span>
               )}
               <span className="absolute right-2 bottom-2 bg-black/55 px-2 py-1 font-mono text-[0.62rem] tracking-[0.12em] text-white uppercase">
-                Tap to view
+                Tap · swipe
               </span>
             </button>
+            </div>
             <div className="unveil">
               <p className="eyebrow flex justify-between">
                 <span>Bay {pad(active + 1)}</span>

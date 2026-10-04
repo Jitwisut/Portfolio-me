@@ -5,7 +5,10 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { materials, milestones } from "@/data/profile";
 import { projects } from "@/data/projects";
-import Reveal from "@/components/ui/Reveal";
+import Hinge from "@/components/ui/Hinge";
+
+const PHONE = "(max-width: 767px)";
+const DESKTOP = "(min-width: 768px)";
 
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9#+]/g, "");
 
@@ -58,37 +61,43 @@ export default function Experience() {
       id="experience"
       data-hour-start="17"
       data-hour-end="18.8"
-      className="relative px-5 py-[30svh] sm:px-10 lg:px-14"
+      className="relative px-4 py-[34svh] sm:px-10 lg:px-14"
       aria-labelledby="experience-title"
     >
       <div className="ml-auto max-w-[46rem]">
-        <Reveal className="panel p-6 sm:p-10">
-          <p className="eyebrow">17:00 — Long shadows</p>
-          <h2 id="experience-title" className="mt-4 font-display text-[clamp(2.6rem,6vw,5rem)] leading-[0.92] tracking-[-0.03em]">
-            The path so far
-          </h2>
-          <p className="mt-4 max-w-[46ch] text-fg-soft">
-            Late in the day the shadows are longest — a good time to look back at how I got here.
-          </p>
+        {/* Desktop: one panel. Phones: a heading sheet, then one sheet per
+            milestone strung along the shadow line, the scene between them. */}
+        <Hinge media={DESKTOP} className="md:panel md:p-10">
+          <Hinge media={PHONE} className="max-md:panel max-md:p-6">
+            <p className="eyebrow">17:00 — Long shadows</p>
+            <h2 id="experience-title" className="mt-4 font-display text-[clamp(2.6rem,6vw,5rem)] leading-[0.92] tracking-[-0.03em]">
+              The path so far
+            </h2>
+            <p className="mt-4 max-w-[46ch] text-fg-soft">
+              Late in the day the shadows are longest — a good time to look back at how I got here.
+            </p>
+          </Hinge>
 
-          <ol ref={list} className="relative mt-10 pl-8 sm:pl-12">
+          <ol ref={list} className="relative mt-[14svh] pl-7 sm:pl-12 md:mt-10">
             {/* The long shadow */}
-            <div className="absolute top-1 bottom-1 left-[5px] w-px bg-fg/12 sm:left-[9px]" aria-hidden>
+            <div className="absolute top-1 bottom-1 left-[5px] w-px bg-fg/15 sm:left-[9px]" aria-hidden>
               <div ref={line} className="h-full w-full origin-top scale-y-0 bg-fg" />
             </div>
-            {milestones.map((m, i) => (
-              <Reveal as="li" key={m.title} delay={i * 60} className="relative pb-9 last:pb-0">
-                <span className="absolute top-2 -left-8 size-[11px] rounded-full border border-fg bg-panel sm:-left-12 sm:size-[19px]" aria-hidden />
-                <p className="eyebrow">{m.when}</p>
-                <h3 className="mt-2 font-display text-2xl leading-tight tracking-tight sm:text-[1.75rem]">{m.title}</h3>
-                <p className="mt-1 text-sm text-fg-soft">{m.place}</p>
-                <p className="mt-3 max-w-[52ch] leading-relaxed">{m.text}</p>
-              </Reveal>
+            {milestones.map((m) => (
+              <Hinge media={PHONE} as="li" key={m.title} className="relative mb-[12svh] last:mb-0 md:mb-9">
+                <span className="absolute top-2 -left-7 size-[11px] rounded-full border border-fg bg-panel sm:-left-12 sm:size-[19px] max-md:top-6" aria-hidden />
+                <div className="max-md:panel max-md:p-5">
+                  <p className="eyebrow">{m.when}</p>
+                  <h3 className="mt-2 font-display text-2xl leading-tight tracking-tight sm:text-[1.75rem]">{m.title}</h3>
+                  <p className="mt-1 text-sm text-fg-soft">{m.place}</p>
+                  <p className="mt-3 max-w-[52ch] leading-relaxed">{m.text}</p>
+                </div>
+              </Hinge>
             ))}
           </ol>
-        </Reveal>
+        </Hinge>
 
-        <Reveal className="panel mt-6 p-6 sm:p-10">
+        <Hinge className="panel mt-[14svh] p-6 sm:p-10 md:mt-6">
           <div className="flex flex-wrap items-baseline justify-between gap-3">
             <h3 className="font-display text-3xl tracking-tight">Schedule of materials</h3>
             <p className="eyebrow">Skills &amp; tools</p>
@@ -145,7 +154,7 @@ export default function Experience() {
               </>
             )}
           </p>
-        </Reveal>
+        </Hinge>
       </div>
     </section>
   );

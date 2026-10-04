@@ -1,5 +1,8 @@
 "use client";
 
+import { useEffect, useRef } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { profile } from "@/data/profile";
 import { useReady } from "@/lib/useReady";
 import LightType from "@/components/ui/LightType";
@@ -19,10 +22,33 @@ const fade = (ready: boolean, delay: number) => ({
  */
 export default function Intro() {
   const ready = useReady();
+  const section = useRef<HTMLElement>(null);
+  const stage = useRef<HTMLDivElement>(null);
+
+  // Leaving sunrise: the whole opening composition tips back on the horizon
+  // and lies down into the landscape, instead of sliding off under the header.
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    gsap.registerPlugin(ScrollTrigger);
+    const el = stage.current!;
+    el.style.transformOrigin = "50% 92%";
+    const st = ScrollTrigger.create({
+      trigger: section.current,
+      start: "top top",
+      end: "bottom top",
+      onUpdate: ({ progress: p }) => {
+        const e = p * p * (3 - 2 * p);
+        el.style.transform = `perspective(900px) translate3d(0, ${(e * 6).toFixed(2)}vh, 0) rotateX(${(e * 62).toFixed(2)}deg)`;
+        el.style.opacity = Math.max(0, 1 - Math.max(0, p - 0.25) * 1.7).toFixed(3);
+        el.style.visibility = p > 0.95 ? "hidden" : "visible";
+      },
+    });
+    return () => st.kill();
+  }, []);
 
   return (
-    <section id="home" data-hour-start="6" className="relative h-[150svh]" aria-labelledby="intro-title">
-      <div className="sticky top-0 flex h-svh flex-col justify-between px-5 pt-24 pb-8 sm:px-10 sm:pt-28 lg:px-14 lg:pb-12">
+    <section ref={section} id="home" data-hour-start="6" className="relative h-[150svh]" aria-labelledby="intro-title">
+      <div ref={stage} className="sticky top-0 flex h-svh flex-col justify-between px-5 pt-24 pb-8 sm:px-10 sm:pt-28 lg:px-14 lg:pb-12">
         {/* Morning haze over the foreground so the captions stay legible. */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-[42%] bg-gradient-to-t from-panel/80 via-panel/45 to-transparent" />
         <div>
