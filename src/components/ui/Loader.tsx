@@ -2,14 +2,24 @@
 
 import { useEffect, useRef, useState } from "react";
 import { READY_EVENT, day } from "@/lib/day";
+import { hasWebGL } from "@/lib/useClient";
 
 const MIN_MS = 1100;
-const MAX_MS = 2400;
+const MAX_MS = 3200;
+const RISE_MS = 2800; // matches the loader-sun keyframes in globals.css
+const SETTLE_MS = 480;
+
+const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
 
 /**
- * Pre-dawn. A horizon line, a sun that rises with the loading progress and
- * a clock counting down to 06:00. When it arrives the sky splits along the
- * horizon and the scene is revealed. Capped at ~2.4s, skippable.
+ * Pre-dawn. A horizon line, a sun that rises while the site loads and a
+ * clock counting down to 06:00. When it arrives the sky splits along the
+ * horizon and the scene is revealed. Capped at ~3.2s, skippable.
+ *
+ * The rise itself is a CSS animation (compositor-driven) so it stays smooth
+ * while the main thread is busy; this component only decides when to finish:
+ * fonts loaded and the 3D scene warmed up (textures + shaders), so the
+ * reveal never shares frames with heavy work.
  */
 export default function Loader() {
   const [phase, setPhase] = useState<"loading" | "leaving" | "done">("loading");
@@ -22,8 +32,9 @@ export default function Loader() {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const t0 = performance.now();
     const max = reduced ? 500 : MAX_MS;
-    let shown = 0;
+    const scene = hasWebGL();
     let raf = 0;
+    let settling = 0;
     let done = false;
     let fontsReady = false;
     document.fonts?.ready.then(() => (fontsReady = true));
@@ -42,30 +53,49 @@ export default function Loader() {
         else target.scrollIntoView();
       }
       day.ready = true;
+      day.readyAt = performance.now();
       window.dispatchEvent(new Event(READY_EVENT));
       setTimeout(() => setPhase("done"), reduced ? 50 : 1150);
     };
-    finish.current = end;
+
+    // The last stretch of the sunrise, from wherever the CSS animation is.
+    const settle = () => {
+      if (settling || done) return;
+      settling = performance.now();
+      const opts: KeyframeAnimationOptions = {
+        duration: reduced ? 1 : SETTLE_MS,
+        easing: "cubic-bezier(0.33, 1, 0.68, 1)",
+        fill: "forwards",
+      };
+      const sun = sunRef.current;
+      const line = lineRef.current;
+      const anim = sun?.animate(
+        [{ transform: getComputedStyle(sun).transform }, { transform: "translate(-50%, 0)" }],
+        opts
+      );
+      line?.animate([{ transform: getComputedStyle(line).transform }, { transform: "scaleX(1)" }], opts);
+      if (anim) anim.finished.then(end, end);
+      else end();
+    };
+    finish.current = settle;
+
+    const rise = () => {
+      const t = sunRef.current?.getAnimations()[0]?.currentTime;
+      return typeof t === "number" ? t : performance.now();
+    };
 
     const loop = () => {
-      const elapsed = performance.now() - t0;
-      // Real progress: fonts + textures (when a canvas exists).
-      const assets = day.assets < 0 ? 1 : day.assets;
-      const real = (fontsReady ? 0.3 : 0) + assets * 0.7;
-      // Never faster than MIN_MS, never slower than max.
-      const timeFloor = Math.min(elapsed / max, 1);
-      const target = Math.max(Math.min(real, elapsed / MIN_MS), timeFloor);
-      shown += (target - shown) * 0.12;
-      if (target >= 1 && shown > 0.995) shown = 1;
+      const now = performance.now();
+      const warm = !scene || day.assets === 1;
+      if (!settling && ((fontsReady && warm && now >= MIN_MS && now - t0 >= 200) || now - t0 >= max)) settle();
 
-      if (sunRef.current) sunRef.current.style.transform = `translate(-50%, ${(1 - shown) * 110}%)`;
-      if (lineRef.current) lineRef.current.style.transform = `scaleX(${0.15 + shown * 0.85})`;
       if (clockRef.current) {
-        const mins = Math.floor(shown * 60);
+        const base = easeOutCubic(Math.min(rise() / RISE_MS, 1)) * 0.85;
+        const p = settling ? base + (1 - base) * Math.min((now - settling) / SETTLE_MS, 1) : base;
+        const mins = Math.floor(p * 60);
         clockRef.current.textContent = mins >= 60 ? "06:00" : `05:${String(mins).padStart(2, "0")}`;
       }
-      if (shown >= 1) end();
-      else raf = requestAnimationFrame(loop);
+      if (!done) raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
 
@@ -85,21 +115,17 @@ export default function Loader() {
     >
       {/* Two halves of the pre-dawn sky; they part along the horizon. */}
       <div
-        className="absolute inset-x-0 top-0 h-1/2 overflow-hidden bg-[#1c2130] transition-transform duration-[1100ms] ease-[cubic-bezier(0.76,0,0.24,1)]"
+        className="absolute inset-x-0 top-0 h-1/2 overflow-hidden bg-[#1c2130] transition-transform duration-[1100ms] ease-[cubic-bezier(0.76,0,0.24,1)] will-change-transform"
         style={{ transform: leaving ? "translateY(-100%)" : "none" }}
       >
         <div className="absolute inset-0 bg-[linear-gradient(180deg,#141826_0%,#3a3547_70%,#8c6a6a_100%)]" />
-        <div ref={sunRef} className="absolute bottom-0 left-1/2 size-16 rounded-full bg-[#ffb487] sm:size-20" style={{ transform: "translate(-50%, 110%)" }} />
+        <div ref={sunRef} className="loader-sun absolute bottom-0 left-1/2 size-16 rounded-full bg-[#ffb487] will-change-transform sm:size-20" />
       </div>
       <div
-        className="absolute inset-x-0 bottom-0 h-1/2 bg-[#1a1d27] transition-transform duration-[1100ms] ease-[cubic-bezier(0.76,0,0.24,1)]"
+        className="absolute inset-x-0 bottom-0 h-1/2 bg-[#1a1d27] transition-transform duration-[1100ms] ease-[cubic-bezier(0.76,0,0.24,1)] will-change-transform"
         style={{ transform: leaving ? "translateY(100%)" : "none" }}
       >
-        <div
-          ref={lineRef}
-          className="absolute inset-x-6 top-0 h-px origin-center bg-[#efe6d8]/70 sm:inset-x-12"
-          style={{ transform: "scaleX(0.15)" }}
-        />
+        <div ref={lineRef} className="loader-line absolute inset-x-6 top-0 h-px origin-center bg-[#efe6d8]/70 will-change-transform sm:inset-x-12" />
         <div className="absolute inset-x-6 top-5 flex items-baseline justify-between font-mono text-[0.7rem] tracking-[0.16em] uppercase sm:inset-x-12">
           <span className="opacity-70">Jitwisut Thobut — Portfolio</span>
           <span>

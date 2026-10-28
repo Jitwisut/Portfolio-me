@@ -335,6 +335,27 @@ body {
   to { opacity: 1; transform: none; }
 }
 
+/* Loader sunrise. Pure CSS transform animations so they run on the
+   compositor from first paint and keep moving while the main thread is busy
+   hydrating and warming up the 3D scene. The sun stops just short of the
+   top; the Loader plays the last bit once everything is ready. */
+@keyframes loader-sun {
+  from { transform: translate(-50%, 110%); }
+  to { transform: translate(-50%, 16%); }
+}
+@keyframes loader-line {
+  from { transform: scaleX(0.15); }
+  to { transform: scaleX(0.88); }
+}
+.loader-sun {
+  transform: translate(-50%, 110%);
+  animation: loader-sun 2.8s cubic-bezier(0.33, 1, 0.68, 1) both;
+}
+.loader-line {
+  transform: scaleX(0.15);
+  animation: loader-line 2.8s cubic-bezier(0.33, 1, 0.68, 1) both;
+}
+
 @keyframes drop {
   0% { transform: translateY(-100%); }
   60%, 100% { transform: translateY(200%); }

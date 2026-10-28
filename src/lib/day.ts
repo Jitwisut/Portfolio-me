@@ -38,11 +38,19 @@ export const day = {
   /** Set by the canvas so the ticker can request a frame (frameloop="demand"). */
   invalidate: (() => {}) as () => void,
   reduced: false,
-  /** 0..1 asset loading progress reported by the canvas; -1 = no canvas. */
+  /**
+   * Scene warm-up: -1 = canvas not mounted (yet), 0 = loading / compiling,
+   * 1 = textures uploaded and shaders compiled, so it renders without stalls.
+   */
   assets: -1,
   /** True once the opening sequence may play (loader gone). */
   ready: false,
+  /** performance.now() when `ready` flipped. */
+  readyAt: 0,
 };
+
+/** How long the opening reveal runs after the loader hands over. */
+export const REVEAL_MS = 2500;
 
 export const READY_EVENT = "pavilion:ready";
 
