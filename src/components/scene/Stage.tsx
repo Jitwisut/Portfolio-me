@@ -14,23 +14,14 @@ import CameraRig from "./CameraRig";
 function Bridge() {
   const invalidate = useThree((s) => s.invalidate);
   useEffect(() => {
-    const mgr = THREE.DefaultLoadingManager;
-    day.assets = 0;
-    mgr.onProgress = (_url, loaded, total) => {
-      day.assets = total ? loaded / total : 1;
-    };
-    mgr.onLoad = () => {
-      day.assets = 1;
-      invalidate();
-    };
+    // Exhibits flips this to 1 once the scene is warmed up.
+    if (day.assets < 0) day.assets = 0;
     day.invalidate = invalidate;
     invalidate();
     const onVisible = () => document.visibilityState === "visible" && invalidate();
     document.addEventListener("visibilitychange", onVisible);
     return () => {
       day.invalidate = () => {};
-      mgr.onProgress = () => {};
-      mgr.onLoad = () => {};
       document.removeEventListener("visibilitychange", onVisible);
     };
   }, [invalidate]);

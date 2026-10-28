@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
-import { useFrame, useLoader } from "@react-three/fiber";
+import { useEffect, useMemo, useState } from "react";
+import { useFrame, useLoader, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { projects } from "@/data/projects";
-import { day } from "@/lib/day";
+import { REVEAL_MS, day } from "@/lib/day";
 import { ART, BAYS, WALL_T, WALL_Z, bayCenter } from "./layout";
 
 /** A typographic plate for projects that have no screenshot yet. */
@@ -31,6 +31,8 @@ function plateTexture(name: string) {
 }
 
 const urls = projects.filter((p) => p.texture).map((p) => p.texture!);
+
+const nextFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()));
 
 export default function Exhibits() {
   const loaded = useLoader(THREE.TextureLoader, urls);
@@ -78,6 +80,44 @@ export default function Exhibits() {
 
   const frameMat = useMemo(() => new THREE.MeshStandardMaterial({ color: "#2b2622", roughness: 0.6 }), []);
 
+  // Warm up before showing anything: decode the screenshots off the main
+  // thread, upload them one per frame and compile the shaders in parallel,
+  // so neither the loader nor the opening reveal hitches on GPU work.
+  const gl = useThree((s) => s.gl);
+  const scene = useThree((s) => s.scene);
+  const camera = useThree((s) => s.camera);
+  const invalidate = useThree((s) => s.invalidate);
+  const [warm, setWarm] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      // The loader stopped waiting for us: let the reveal play out first.
+      if (day.ready) {
+        const wait = day.readyAt + REVEAL_MS - performance.now();
+        if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+      }
+      for (const t of textures) {
+        const img = t.image as HTMLImageElement;
+        await img.decode?.().catch(() => {});
+        if (!alive) return;
+        gl.initTexture(t);
+        await nextFrame();
+      }
+      await gl.compileAsync(scene, camera);
+      if (!alive) return;
+      setWarm(true);
+      invalidate();
+      // One real render (with its shadow pass) before the loader may leave.
+      await nextFrame();
+      await nextFrame();
+      day.assets = 1;
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [textures, gl, scene, camera, invalidate]);
+
   useEffect(
     () => () => {
       materials.forEach((m) => m.dispose());
@@ -101,7 +141,7 @@ export default function Exhibits() {
   const z = WALL_Z + WALL_T / 2;
 
   return (
-    <group>
+    <group visible={warm}>
       {projects.map((p, i) => (
         <group key={p.slug} position={[bayCenter(i), ART.y, z]}>
           <mesh position={[0, 0, 0.03]} material={frameMat} castShadow receiveShadow>
